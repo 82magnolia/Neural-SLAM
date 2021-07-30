@@ -19,6 +19,12 @@ a short-term goal using an analytic path planner. A Local Policy is trained to n
 
 
 ## Installing Dependencies
+Before all of this, make a conda env with the following command.
+
+```
+conda create --name nslam python=3.7
+```
+
 We use earlier versions of [habitat-sim](https://github.com/facebookresearch/habitat-sim) and [habitat-api](https://github.com/facebookresearch/habitat-api). The specific commits are mentioned below.
 
 Installing habitat-sim:
