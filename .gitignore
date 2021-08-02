@@ -132,3 +132,4 @@ dmypy.json
 data
 habitat-api
 habitat-sim
+pretrained_models
