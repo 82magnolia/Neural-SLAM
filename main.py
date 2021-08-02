@@ -67,11 +67,14 @@ def main():
     log_dir = "{}/models/{}/".format(args.dump_location, args.exp_name)
     dump_dir = "{}/dump/{}/".format(args.dump_location, args.exp_name)
     vid_dir = "{}/video/{}/".format(args.dump_location, args.exp_name)
+    data_dir = "{}/data/{}/".format(args.dump_location, args.exp_name)
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     if args.video and not os.path.exists(vid_dir):
         os.makedirs(vid_dir)
+    if args.video and not os.path.exists(data_dir):
+        os.makedirs(data_dir)
 
     if not os.path.exists("{}/images/".format(dump_dir)):
         os.makedirs("{}/images/".format(dump_dir))
@@ -334,7 +337,6 @@ def main():
         action_list = []
         total_action_list = []
         if ep_num % args.traj_per_scene == 0 and ep_num != 0:
-            import pdb; pdb.set_trace()
             envs = make_vec_envs(args, ep_num // args.traj_per_scene)
         if ep_num != 0:
             obs, infos = envs.reset()
@@ -345,6 +347,8 @@ def main():
                     img = Image.fromarray(obs[idx].cpu().long().permute(1, 2, 0).numpy().astype(np.uint8))
                     img.save(vid_dir + f"episode_{ep_num}_sub_{idx}_step_{step}.png")
 
+            for idx in range(obs.shape[0]):
+                torch.save({"obs": obs.cpu(), "infos": infos}, data_dir + f"episode_{ep_num}@sub_{idx}@step_{step}.pt")
             total_num_steps += 1
 
             g_step = (step // args.num_local_steps) % args.num_global_steps
