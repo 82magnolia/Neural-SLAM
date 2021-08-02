@@ -58,9 +58,9 @@ def get_args():
                         help='1:Render the frame (default: 0)')
     parser.add_argument('--video', type=int, default=0,
                         help='1:Make video (default: 0)')
-    parser.add_argument('--return_step', type=int, default=250,
+    parser.add_argument('--return_step', type=int, default=50,
                         help='Number of steps to take before return')
-    parser.add_argument('--traj_per_scene', type=int, default=5,
+    parser.add_argument('--traj_per_scene', type=int, default=10,
                         help='Number of trajectories to generate per scene')
     parser.add_argument('--vis_type', type=int, default=1,
                         help='1: Show predicted map, 2: Show GT map')
