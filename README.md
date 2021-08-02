@@ -50,12 +50,13 @@ Install pytorch from https://pytorch.org/ according to your system configuration
 ```
 conda install pytorch==1.2.0 torchvision cudatoolkit=10.0 -c pytorch #(Linux with GPU)
 conda install pytorch==1.2.0 torchvision==0.4.0 -c pytorch #(Mac OS)
+pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html #(for RTX 3090)
 ```
 
 ## Setup
 Clone the repository and install other requirements:
 ```
-git clone --recurse-submodules https://github.com/devendrachaplot/Neural-SLAM
+git clone --recurse-submodules https://github.com/82magnolia/Neural-SLAM
 cd Neural-SLAM;
 pip install -r requirements.txt
 ```
