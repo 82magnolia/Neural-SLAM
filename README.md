@@ -33,7 +33,8 @@ Installing habitat-sim:
 git clone https://github.com/facebookresearch/habitat-sim.git
 cd habitat-sim; git checkout 9575dcd45fe6f55d2a44043833af08972a7895a9; 
 pip install -r requirements.txt; 
-python setup.py install --headless
+# python setup.py install --headless
+python setup.py build_ext --parallel 3 install --headless  # Lighter version
 python setup.py install # (for Mac OS)
 
 ```
