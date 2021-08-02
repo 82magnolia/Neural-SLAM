@@ -66,9 +66,12 @@ def main():
     # Setup Logging
     log_dir = "{}/models/{}/".format(args.dump_location, args.exp_name)
     dump_dir = "{}/dump/{}/".format(args.dump_location, args.exp_name)
+    vid_dir = "{}/video/{}/".format(args.dump_location, args.exp_name)
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
+    if args.video and not os.path.exists(vid_dir):
+        os.makedirs(vid_dir)
 
     if not os.path.exists("{}/images/".format(dump_dir)):
         os.makedirs("{}/images/".format(dump_dir))
@@ -116,7 +119,7 @@ def main():
 
     # Starting environments
     torch.set_num_threads(1)
-    envs = make_vec_envs(args)
+    envs = make_vec_envs(args, 0)
     obs, infos = envs.reset()
 
     # Initialize map variables
@@ -325,8 +328,23 @@ def main():
 
     torch.set_grad_enabled(False)
 
-    for ep_num in range(num_episodes):
-        for step in range(args.max_episode_length):
+    tot_step = args.return_step * 2 + 18
+    for ep_num in range(args.total_num_scenes * args.traj_per_scene):
+        print(ep_num)
+        action_list = []
+        total_action_list = []
+        if ep_num % args.traj_per_scene == 0 and ep_num != 0:
+            import pdb; pdb.set_trace()
+            envs = make_vec_envs(args, ep_num // args.traj_per_scene)
+        if ep_num != 0:
+            obs, infos = envs.reset()
+        for step in range(tot_step):
+            if args.video:
+                from PIL import Image
+                for idx in range(obs.shape[0]):
+                    img = Image.fromarray(obs[idx].cpu().long().permute(1, 2, 0).numpy().astype(np.uint8))
+                    img.save(vid_dir + f"episode_{ep_num}_sub_{idx}_step_{step}.png")
+
             total_num_steps += 1
 
             g_step = (step // args.num_local_steps) % args.num_global_steps
@@ -357,6 +375,22 @@ def main():
             l_action = action.cpu()
             # ------------------------------------------------------------------
 
+            # Go back using saved action_list: 0 = TURN LEFT, 1 = TURN RIGHT, 2 = FORWARD
+            if step < args.return_step:
+                action_list.append(l_action.item())
+                total_action_list.append(l_action.item())
+            elif step >= args.return_step and step < args.return_step + 18:
+                l_action.fill_(0)
+            elif step >= args.return_step + 18:
+                latest_action = action_list.pop()
+                if latest_action == 2:
+                    fill_val = 2
+                elif latest_action == 1:
+                    fill_val = 0
+                elif latest_action == 0:
+                    fill_val = 1
+                l_action.fill_(fill_val)
+                total_action_list.append(l_action.item())
             # ------------------------------------------------------------------
             # Env step
             obs, rew, done, infos = envs.step(l_action)
@@ -625,144 +659,6 @@ def main():
             torch.set_grad_enabled(False)
             # ------------------------------------------------------------------
 
-            # ------------------------------------------------------------------
-            # Logging
-            if total_num_steps % args.log_interval == 0:
-                end = time.time()
-                time_elapsed = time.gmtime(end - start)
-                log = " ".join([
-                    "Time: {0:0=2d}d".format(time_elapsed.tm_mday - 1),
-                    "{},".format(time.strftime("%Hh %Mm %Ss", time_elapsed)),
-                    "num timesteps {},".format(total_num_steps *
-                                               num_scenes),
-                    "FPS {},".format(int(total_num_steps * num_scenes \
-                                         / (end - start)))
-                ])
-
-                log += "\n\tRewards:"
-
-                if len(g_episode_rewards) > 0:
-                    log += " ".join([
-                        " Global step mean/med rew:",
-                        "{:.4f}/{:.4f},".format(
-                            np.mean(per_step_g_rewards),
-                            np.median(per_step_g_rewards)),
-                        " Global eps mean/med/min/max eps rew:",
-                        "{:.3f}/{:.3f}/{:.3f}/{:.3f},".format(
-                            np.mean(g_episode_rewards),
-                            np.median(g_episode_rewards),
-                            np.min(g_episode_rewards),
-                            np.max(g_episode_rewards))
-                    ])
-
-                log += "\n\tLosses:"
-
-                if args.train_local and len(l_action_losses) > 0:
-                    log += " ".join([
-                        " Local Loss:",
-                        "{:.3f},".format(
-                            np.mean(l_action_losses))
-                    ])
-
-                if args.train_global and len(g_value_losses) > 0:
-                    log += " ".join([
-                        " Global Loss value/action/dist:",
-                        "{:.3f}/{:.3f}/{:.3f},".format(
-                            np.mean(g_value_losses),
-                            np.mean(g_action_losses),
-                            np.mean(g_dist_entropies))
-                    ])
-
-                if args.train_slam and len(costs) > 0:
-                    log += " ".join([
-                        " SLAM Loss proj/exp/pose:"
-                        "{:.4f}/{:.4f}/{:.4f}".format(
-                            np.mean(costs),
-                            np.mean(exp_costs),
-                            np.mean(pose_costs))
-                    ])
-
-                print(log)
-                logging.info(log)
-            # ------------------------------------------------------------------
-
-            # ------------------------------------------------------------------
-            # Save best models
-            if (total_num_steps * num_scenes) % args.save_interval < \
-                    num_scenes:
-
-                # Save Neural SLAM Model
-                if len(costs) >= 1000 and np.mean(costs) < best_cost \
-                        and not args.eval:
-                    best_cost = np.mean(costs)
-                    torch.save(nslam_module.state_dict(),
-                               os.path.join(log_dir, "model_best.slam"))
-
-                # Save Local Policy Model
-                if len(l_action_losses) >= 100 and \
-                        (np.mean(l_action_losses) <= best_local_loss) \
-                        and not args.eval:
-                    torch.save(l_policy.state_dict(),
-                               os.path.join(log_dir, "model_best.local"))
-
-                    best_local_loss = np.mean(l_action_losses)
-
-                # Save Global Policy Model
-                if len(g_episode_rewards) >= 100 and \
-                        (np.mean(g_episode_rewards) >= best_g_reward) \
-                        and not args.eval:
-                    torch.save(g_policy.state_dict(),
-                               os.path.join(log_dir, "model_best.global"))
-                    best_g_reward = np.mean(g_episode_rewards)
-
-            # Save periodic models
-            if (total_num_steps * num_scenes) % args.save_periodic < \
-                    num_scenes:
-                step = total_num_steps * num_scenes
-                if args.train_slam:
-                    torch.save(nslam_module.state_dict(),
-                               os.path.join(dump_dir,
-                                            "periodic_{}.slam".format(step)))
-                if args.train_local:
-                    torch.save(l_policy.state_dict(),
-                               os.path.join(dump_dir,
-                                            "periodic_{}.local".format(step)))
-                if args.train_global:
-                    torch.save(g_policy.state_dict(),
-                               os.path.join(dump_dir,
-                                            "periodic_{}.global".format(step)))
-            # ------------------------------------------------------------------
-
-    # Print and save model performance numbers during evaluation
-    if args.eval:
-        logfile = open("{}/explored_area.txt".format(dump_dir), "w+")
-        for e in range(num_scenes):
-            for i in range(explored_area_log[e].shape[0]):
-                logfile.write(str(explored_area_log[e, i]) + "\n")
-                logfile.flush()
-
-        logfile.close()
-
-        logfile = open("{}/explored_ratio.txt".format(dump_dir), "w+")
-        for e in range(num_scenes):
-            for i in range(explored_ratio_log[e].shape[0]):
-                logfile.write(str(explored_ratio_log[e, i]) + "\n")
-                logfile.flush()
-
-        logfile.close()
-
-        log = "Final Exp Area: \n"
-        for i in range(explored_area_log.shape[2]):
-            log += "{:.5f}, ".format(
-                np.mean(explored_area_log[:, :, i]))
-
-        log += "\nFinal Exp Ratio: \n"
-        for i in range(explored_ratio_log.shape[2]):
-            log += "{:.5f}, ".format(
-                np.mean(explored_ratio_log[:, :, i]))
-
-        print(log)
-        logging.info(log)
 
 
 if __name__ == "__main__":

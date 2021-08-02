@@ -56,6 +56,12 @@ def get_args():
                                 0 to not reload (default: 0)""")
     parser.add_argument('-v', '--visualize', type=int, default=0,
                         help='1:Render the frame (default: 0)')
+    parser.add_argument('--video', type=int, default=0,
+                        help='1:Make video (default: 0)')
+    parser.add_argument('--return_step', type=int, default=30,
+                        help='Number of steps to take before return')
+    parser.add_argument('--traj_per_scene', type=int, default=2,
+                        help='Number of trajectories to generate per scene')
     parser.add_argument('--vis_type', type=int, default=1,
                         help='1: Show predicted map, 2: Show GT map')
     parser.add_argument('--print_images', type=int, default=0,
@@ -228,6 +234,19 @@ def get_args():
                                       args.num_processes_on_first_gpu))
             print("Number of processes per GPU: {}".format(
                                       args.num_processes_per_gpu))
+
+    if "gibson" in args.task_config and \
+            "train" in args.split:
+        args.total_num_scenes = 72
+    elif "gibson" in args.task_config and \
+            "val_mini" in args.split:
+        args.total_num_scenes = 14
+    elif "gibson" in args.task_config and \
+            "val" in args.split:
+        args.total_num_scenes = 14
+    else:
+        assert False, "Unknown task config, please specify" + \
+                " total_num_scenes"
 
     if args.eval == 1:
         if args.train_global:

@@ -26,7 +26,7 @@ def make_env_fn(args, config_env, config_baseline, rank):
     return env
 
 
-def construct_envs(args):
+def construct_envs(args, scene_idx):
     env_configs = []
     baseline_configs = []
     args_list = []
@@ -52,9 +52,7 @@ def construct_envs(args):
         config_env.defrost()
 
         if len(scenes) > 0:
-            config_env.DATASET.CONTENT_SCENES = scenes[
-                                                i * scene_split_size: (i + 1) * scene_split_size
-                                                ]
+            config_env.DATASET.CONTENT_SCENES = scenes[(scene_idx + i) % len(scenes): (scene_idx + i) % len(scenes) + 1]
 
         if i < args.num_processes_on_first_gpu:
             gpu_id = 0

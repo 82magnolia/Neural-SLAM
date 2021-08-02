@@ -185,6 +185,7 @@ class Exploration_Env(habitat.RLEnv):
             'fp_explored': fp_explored,
             'sensor_pose': [0., 0., 0.],
             'pose_err': [0., 0., 0.],
+            'd_gt_pose': [0., 0., 0.]
         }
 
         self.save_position()
@@ -289,6 +290,7 @@ class Exploration_Env(habitat.RLEnv):
                                  dy_gt - dy_base,
                                  do_gt - do_base]
 
+        self.info['d_gt_pose'] = [dx_gt, dy_gt, do_gt]
 
         if self.timestep%args.num_local_steps==0:
             area, ratio = self.get_global_reward()

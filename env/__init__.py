@@ -3,8 +3,8 @@ import torch
 from .habitat import construct_envs
 
 
-def make_vec_envs(args):
-    envs = construct_envs(args)
+def make_vec_envs(args, scene_idx):
+    envs = construct_envs(args, scene_idx)
     envs = VecPyTorch(envs, args.device)
     return envs
 
