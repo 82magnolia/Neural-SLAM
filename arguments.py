@@ -17,7 +17,7 @@ def get_args():
                                 and training on gpus """)
     parser.add_argument('--num_processes_per_gpu', type=int, default=11)
     parser.add_argument('--num_processes_on_first_gpu', type=int, default=0)
-    parser.add_argument('--num_episodes', type=int, default=1000000,
+    parser.add_argument('--num_episodes', type=int, default=2,
                         help='number of training episodes (default: 1000000)')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
