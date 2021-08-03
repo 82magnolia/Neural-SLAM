@@ -400,6 +400,8 @@ def main():
                 [infos[env_idx]['sensor_pose'] for env_idx
                  in range(num_scenes)])
             ).float().to(device)
+            temp = "==========poses: %s" % poses
+            logging.info(temp)
 
             _, _, local_map[:, 0, :, :], local_map[:, 1, :, :], _, local_pose = \
                 nslam_module(last_obs, obs, poses, local_map[:, 0, :, :],
