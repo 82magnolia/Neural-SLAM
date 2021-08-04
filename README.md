@@ -54,7 +54,7 @@ conda install pytorch==1.9.0 torchvision cudatoolkit=10.2 -c pytorch #(Linux wit
 ## Setup
 Clone the repository and install other requirements:
 ```
-git clone --recurse-submodules https://github.com/devendrachaplot/Neural-SLAM
+git clone --recurse-submodules https://github.com/82magnolia/Neural-SLAM
 cd Neural-SLAM;
 pip install -r requirements.txt
 ```
