@@ -45,10 +45,9 @@ cd habitat-api; git checkout b5f2b00a25627ecb52b43b13ea96b05998d9a121;
 pip install -e .
 ```
 
-Install pytorch from https://pytorch.org/ according to your system configuration. The code is tested on pytorch v1.2.0. If you are using conda:
+Install pytorch from https://pytorch.org/ according to your system configuration. The code is tested on pytorch v1.9.0. If you are using conda:
 ```
-conda install pytorch==1.2.0 torchvision cudatoolkit=10.0 -c pytorch #(Linux with GPU)
-conda install pytorch==1.2.0 torchvision==0.4.0 -c pytorch #(Mac OS)
+conda install pytorch==1.9.0 torchvision cudatoolkit=10.2 -c pytorch #(Linux with GPU)
 ```
 
 ## Setup
