@@ -24,6 +24,7 @@ Before all of this, make a conda env with the following command.
 ```
 conda create --name nslam python=3.7
 ```
+Now, before going below, go to setup and clone repository.
 
 We use earlier versions of [habitat-sim](https://github.com/facebookresearch/habitat-sim) and [habitat-api](https://github.com/facebookresearch/habitat-api). The specific commits are mentioned below.
 Make both directories right inside the Neural-SLAM directory.
