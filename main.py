@@ -98,7 +98,7 @@ def main():
 
     # Hardcoded for evaluation in Gibson env.
     if args.eval:
-        scene_count = 2
+        scene_count = 14
     else:
         scene_count =  args.total_num_scenes
 
