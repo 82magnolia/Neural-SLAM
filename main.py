@@ -82,7 +82,6 @@ def main():
 
     # Logging and loss variables
     num_scenes = args.num_processes
-    num_episodes = int(args.num_episodes)
     device = args.device = torch.device("cuda:0" if args.cuda else "cpu")
     policy_loss = 0
 
@@ -96,6 +95,16 @@ def main():
 
     best_local_loss = np.inf
     best_g_reward = -np.inf
+
+    # Hardcoded for evaluation in Gibson env.
+    if args.eval:
+        scene_count = 2
+    else:
+        scene_count =  args.total_num_scenes
+
+    assert scene_count % num_scenes == 0
+    num_scene_iter = scene_count // num_scenes
+    num_episodes = args.traj_per_scene * num_scene_iter
 
     if args.eval:
         traj_lengths = args.max_episode_length // args.num_local_steps
@@ -116,7 +125,7 @@ def main():
 
     # Starting environments
     torch.set_num_threads(1)
-    envs = make_vec_envs(args)
+    envs = make_vec_envs(args, list(range(0, num_scenes)))
     obs, infos = envs.reset()
 
     # Initialize map variables
@@ -326,6 +335,14 @@ def main():
     torch.set_grad_enabled(False)
 
     for ep_num in range(num_episodes):
+        if ep_num % args.traj_per_scene == 0 and ep_num != 0:
+            global_idx = ep_num // args.traj_per_scene
+            load_scene_idx = range(global_idx * num_scenes, 
+                (global_idx + 1) * num_scenes)
+            envs = make_vec_envs(args, list(load_scene_idx))
+        if ep_num != 0:
+            obs, infos = envs.reset()
+
         for step in range(args.max_episode_length):
             total_num_steps += 1
 
