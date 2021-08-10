@@ -48,9 +48,7 @@ pip install -e .
 
 Install pytorch from https://pytorch.org/ according to your system configuration. The code is tested on pytorch v1.2.0. If you are using conda:
 ```
-conda install pytorch==1.2.0 torchvision cudatoolkit=10.0 -c pytorch #(Linux with GPU)
-conda install pytorch==1.2.0 torchvision==0.4.0 -c pytorch #(Mac OS)
-pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html #(for RTX 3090)
+conda install pytorch==1.9.0 torchvision cudatoolkit=10.2 -c pytorch #(Linux with GPU)
 ```
 
 ## Setup
