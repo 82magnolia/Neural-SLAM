@@ -73,7 +73,7 @@ def main():
         os.makedirs(log_dir)
     if args.video and not os.path.exists(vid_dir):
         os.makedirs(vid_dir)
-    if args.video and not os.path.exists(data_dir):
+    if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
     if not os.path.exists("{}/images/".format(dump_dir)):
