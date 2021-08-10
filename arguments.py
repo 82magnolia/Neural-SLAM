@@ -34,6 +34,10 @@ def get_args():
                                 1: Train the Neural SLAM Module (default: 1)""")
     parser.add_argument('--traj_per_scene', type=int, default=10,
                         help='Number of trajectories to generate per scene')
+    parser.add_argument('--override_scene_count', type=int, default=0,
+                        help='Number of scene count to override')
+    parser.add_argument('--override_traj_per_scene', type=int, default=0,
+                        help='Number of traj per scene to override')
 
     # Logging, loading models, visualization
     parser.add_argument('--log_interval', type=int, default=10,

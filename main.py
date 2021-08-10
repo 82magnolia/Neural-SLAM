@@ -101,7 +101,14 @@ def main():
         scene_count = 14
     else:
         scene_count =  args.total_num_scenes
-
+    
+    # Override number of scenes / trajectories to test
+    if args.override_scene_count:
+        scene_count = args.override_scene_count
+    
+    if args.override_traj_per_scene:
+        args.traj_per_scene = args.override_traj_per_scene
+    print(scene_count)
     assert scene_count % num_scenes == 0
     num_scene_iter = scene_count // num_scenes
     num_episodes = args.traj_per_scene * num_scene_iter
