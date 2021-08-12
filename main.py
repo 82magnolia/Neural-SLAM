@@ -252,8 +252,8 @@ def main():
 
     # Loading model
     if args.load_slam != "0":
-        print("Loading slam {}".format(args.load_slam))
-        state_dict = torch.load(args.load_slam,
+        print("Loading slam {}".format(args.load_slam + "last_0.slam"))
+        state_dict = torch.load(args.load_slam + "last_0.slam",
                                 map_location=lambda storage, loc: storage)
         nslam_module.load_state_dict(state_dict)
 
@@ -343,6 +343,11 @@ def main():
 
     for ep_num in range(num_episodes):
         if ep_num % args.traj_per_scene == 0 and ep_num != 0:
+            print("Loading slam {}".format(args.load_slam + f"last_{ep_num // args.traj_per_scene}.slam"))
+            state_dict = torch.load(args.load_slam + f"last_{ep_num // args.traj_per_scene}.slam",
+                                    map_location=lambda storage, loc: storage)
+            nslam_module.load_state_dict(state_dict)
+
             global_idx = ep_num // args.traj_per_scene
             load_scene_idx = range(global_idx * num_scenes, 
                 (global_idx + 1) * num_scenes)
