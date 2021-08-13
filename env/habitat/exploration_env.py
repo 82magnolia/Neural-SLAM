@@ -25,7 +25,6 @@ from habitat import logger
 from env.utils.map_builder import MapBuilder
 from env.utils.fmm_planner import FMMPlanner
 
-from env.habitat.utils.noisy_actions import CustomActionSpaceConfiguration
 import env.habitat.utils.pose as pu
 import env.habitat.utils.visualizations as vu
 from env.habitat.utils.supervision import HabitatMaps
@@ -56,6 +55,15 @@ class Exploration_Env(habitat.RLEnv):
             self.figure, self.ax = plt.subplots(1,2, figsize=(6*16/9, 6),
                                                 facecolor="whitesmoke",
                                                 num="Thread {}".format(rank))
+        if args.noisy_actions == 1:
+            if args.noisy_action_type == 'motion_bias_c':
+                from env.habitat.utils.noisy_actions_motion_bias_c import CustomActionSpaceConfiguration
+            elif args.noisy_action_type == 'motion_bias_s':
+                from env.habitat.utils.noisy_actions_motion_bias_s import CustomActionSpaceConfiguration
+            elif args.noisy_action_type == 'motion_drift':
+                from env.habitat.utils.noisy_actions_motion_drift import CustomActionSpaceConfiguration
+            else:
+                from env.habitat.utils.noisy_actions import CustomActionSpaceConfiguration
 
         self.args = args
         self.num_actions = 3

@@ -95,6 +95,8 @@ def get_args():
                         help="horizontal field of view in degrees")
     parser.add_argument('--randomize_env_every', type=int, default=1000,
                         help="randomize scene in a thread every k episodes")
+    parser.add_argument('--noisy_action_type', type=str, default='default',
+                        help="Type of noisy action to use for actuation noise")
 
     ## Global Policy RL PPO Hyperparameters
     parser.add_argument('--global_lr', type=float, default=2.5e-5,
