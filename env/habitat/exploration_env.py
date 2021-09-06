@@ -28,7 +28,7 @@ from env.utils.fmm_planner import FMMPlanner
 import env.habitat.utils.pose as pu
 import env.habitat.utils.visualizations as vu
 from env.habitat.utils.supervision import HabitatMaps
-
+# from env.habitat.utils.noisy_actions import CustomActionSpaceConfiguration
 from model import get_grid
 
 
@@ -78,14 +78,15 @@ class Exploration_Env(habitat.RLEnv):
         self.sensor_noise_left = \
                 pickle.load(open("noise_models/sensor_noise_left.pkl", 'rb'))
 
-        habitat.SimulatorActions.extend_action_space("NOISY_FORWARD")
-        habitat.SimulatorActions.extend_action_space("NOISY_RIGHT")
-        habitat.SimulatorActions.extend_action_space("NOISY_LEFT")
+        if args.noisy_actions == 1: 
+            habitat.SimulatorActions.extend_action_space("NOISY_FORWARD")
+            habitat.SimulatorActions.extend_action_space("NOISY_RIGHT")
+            habitat.SimulatorActions.extend_action_space("NOISY_LEFT")
 
-        config_env.defrost()
-        config_env.SIMULATOR.ACTION_SPACE_CONFIG = \
-                "CustomActionSpaceConfiguration"
-        config_env.freeze()
+            config_env.defrost()
+            config_env.SIMULATOR.ACTION_SPACE_CONFIG = \
+                    "CustomActionSpaceConfiguration"
+            config_env.freeze()
 
 
         super().__init__(config_env, dataset)
@@ -208,13 +209,16 @@ class Exploration_Env(habitat.RLEnv):
         # Action remapping
         if action == 2: # Forward
             action = 1
-            noisy_action = habitat.SimulatorActions.NOISY_FORWARD
+            if args.noisy_actions:
+                noisy_action = habitat.SimulatorActions.NOISY_FORWARD
         elif action == 1: # Right
             action = 3
-            noisy_action = habitat.SimulatorActions.NOISY_RIGHT
+            if args.noisy_actions:
+                noisy_action = habitat.SimulatorActions.NOISY_RIGHT
         elif action == 0: # Left
             action = 2
-            noisy_action = habitat.SimulatorActions.NOISY_LEFT
+            if args.noisy_actions:
+                noisy_action = habitat.SimulatorActions.NOISY_LEFT
 
         self.last_loc = np.copy(self.curr_loc)
         self.last_loc_gt = np.copy(self.curr_loc_gt)

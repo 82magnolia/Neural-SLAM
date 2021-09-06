@@ -89,6 +89,7 @@ def get_args():
                         help="dataset split (train | val | val_mini) ")
     parser.add_argument('-na', '--noisy_actions', type=int, default=1)
     parser.add_argument('-no', '--noisy_odometry', type=int, default=1)
+    parser.add_argument('-nrgb', '--noisy_rgb', type=int, default=0)
     parser.add_argument('--camera_height', type=float, default=1.25,
                         help="agent camera height in metres")
     parser.add_argument('--hfov', type=float, default=90.0,

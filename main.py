@@ -21,6 +21,7 @@ import algo
 
 import sys
 import matplotlib
+import skimage
 
 if sys.platform == 'darwin':
     matplotlib.use("tkagg")
@@ -348,6 +349,23 @@ def main():
                     img.save(vid_dir + f"episode_{ep_num}_sub_{idx}_step_{step}.png")
 
             for idx in range(obs.shape[0]):
+
+                
+                if args.noisy_rgb: 
+                    temp = torch.permute(obs[idx], (1,2,0)).cpu().numpy()
+                    temp = temp/255
+                    temp = skimage.util.random_noise(temp, mode = 'gaussian', var = 0.01) #default (0, 0.01)
+                    temp = (temp*255).astype(np.uint8) 
+                    temp = torch.Tensor(temp).to(device)
+                    temp = torch.permute(temp, (2,0,1))
+                    temp = temp.unsqueeze(0)
+                    obs = temp
+
+                # img = Image.fromarray(temp.astype(np.uint8))
+                # img.save(f"tempp/noisy_{step}_10.png")
+                # img = Image.fromarray(temp.astype(np.uint8))
+                # img.save(f"tempp/image_{step}.png")   
+
                 torch.save({"obs": obs.cpu(), "infos": infos}, data_dir + f"episode_{ep_num}@sub_{idx}@step_{step}.pt")
             total_num_steps += 1
 
