@@ -88,6 +88,15 @@ class Exploration_Env(habitat.RLEnv):
                     "CustomActionSpaceConfiguration"
             config_env.freeze()
 
+        print("==============================================")
+        print("==============================================")
+
+        print(" config env !!! : " , config_env.TASK)
+        print("==============================================")
+        print("==============================================")
+        print("==============================================")
+        print("==============================================")
+        print("==============================================")
 
         super().__init__(config_env, dataset)
 
@@ -148,10 +157,12 @@ class Exploration_Env(habitat.RLEnv):
         self.explorable_map = None
         while self.explorable_map is None:
             obs = super().reset()
+            print(obs)
             full_map_size = args.map_size_cm//args.map_resolution
             self.explorable_map = self._get_gt_map(full_map_size)
         self.prev_explored_area = 0.
 
+        
         # Preprocess observations
         rgb = obs['rgb'].astype(np.uint8)
         self.obs = rgb # For visualization
@@ -169,6 +180,13 @@ class Exploration_Env(habitat.RLEnv):
         self.last_loc_gt = self.curr_loc_gt
         self.last_loc = self.curr_loc
         self.last_sim_location = self.get_sim_location()
+
+        dist, angle = obs['pointgoal']
+        x = int(dist*np.cos(angle)*20.0)
+        y = int(dist*np.sin(angle)*20.0)
+        self.pg_loc = [self.map_size_cm//2//args.map_resolution + y,
+               self.map_size_cm//2//args.map_resolution + x]
+        self.stop_next_action = 0 
 
         # Convert pose to cm and degrees for mapper
         mapper_gt_pose = (self.curr_loc_gt[0]*100.0,
@@ -194,7 +212,10 @@ class Exploration_Env(habitat.RLEnv):
             'fp_explored': fp_explored,
             'sensor_pose': [0., 0., 0.],
             'pose_err': [0., 0., 0.],
-            'd_gt_pose': [0., 0., 0.]
+            'd_gt_pose': [0., 0., 0.],
+            'pointgoal': self.habitat_env.current_episode.goals[0].position,
+            'pointgoal_measurements': self._env.get_metrics(),
+            'position': self._env.sim.get_agent_state().position
         }
 
         self.save_position()
@@ -219,6 +240,9 @@ class Exploration_Env(habitat.RLEnv):
             action = 2
             if args.noisy_actions:
                 noisy_action = habitat.SimulatorActions.NOISY_LEFT
+
+        if self.stop_next_action == 1:
+            action = 0
 
         self.last_loc = np.copy(self.curr_loc)
         self.last_loc_gt = np.copy(self.curr_loc_gt)
@@ -303,6 +327,9 @@ class Exploration_Env(habitat.RLEnv):
                                  do_gt - do_base]
 
         self.info['d_gt_pose'] = [dx_gt, dy_gt, do_gt]
+        self.info['pointgoal'] = self.habitat_env.current_episode.goals[0].position
+        self.info['pointgoal_measurements'] = self._env.get_metrics()
+        self.info['position'] = self._env.sim.get_agent_state().position
 
         if self.timestep%args.num_local_steps==0:
             area, ratio = self.get_global_reward()
@@ -482,9 +509,14 @@ class Exploration_Env(habitat.RLEnv):
 
 
         # Get goal
-        goal = inputs['goal']
+        #goal = inputs['goal']
+        goal = [self.pg_loc[0] - gx1, self.pg_loc[1] - gy1]
+        print("start: ", start)
+        print("goal: ", goal)
+        print(pu.get_l2_distance(start[0], goal[0], start[1], goal[1])*5 )
+        if pu.get_l2_distance(start[0], goal[0], start[1], goal[1])*5 < 25:
+            self.stop_next_action = 1
         goal = pu.threshold_poses(goal, grid.shape)
-
 
         # Get intrinsic reward for global policy
         # Negative reward for exploring explored areas i.e.

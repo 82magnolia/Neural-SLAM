@@ -51,6 +51,8 @@ def construct_envs(args, scene_idx):
                              ["env/habitat/habitat_api/configs/" + args.task_config])
         config_env.defrost()
 
+        config_env.TASK.SENSORS.append("POINTGOAL_SENSOR")
+
         if len(scenes) > 0:
             config_env.DATASET.CONTENT_SCENES = scenes[(scene_idx + i) % len(scenes): (scene_idx + i) % len(scenes) + 1]
 
