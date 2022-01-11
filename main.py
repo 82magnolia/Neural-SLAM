@@ -275,6 +275,8 @@ def main():
          in range(num_scenes)])
     ).float().to(device)
 
+
+
     _, _, local_map[:, 0, :, :], local_map[:, 1, :, :], _, local_pose = \
         nslam_module(obs, obs, poses, local_map[:, 0, :, :],
                      local_map[:, 1, :, :], local_pose)
@@ -332,7 +334,8 @@ def main():
 
     torch.set_grad_enabled(False)
 
-    tot_step = args.return_step * 2 + 18
+    #tot_step = args.return_step * 2 + 18
+    tot_step = 500
     for ep_num in range(args.total_num_scenes * args.traj_per_scene):
         print(ep_num)
         action_list = []
@@ -348,25 +351,25 @@ def main():
                     img = Image.fromarray(obs[idx].cpu().long().permute(1, 2, 0).numpy().astype(np.uint8))
                     img.save(vid_dir + f"episode_{ep_num}_sub_{idx}_step_{step}.png")
 
-            for idx in range(obs.shape[0]):
+            # for idx in range(obs.shape[0]):
 
                 
-                if args.noisy_rgb: 
-                    temp = torch.permute(obs[idx], (1,2,0)).cpu().numpy()
-                    temp = temp/255
-                    temp = skimage.util.random_noise(temp, mode = 'gaussian', var = 0.01) #default (0, 0.01)
-                    temp = (temp*255).astype(np.uint8) 
-                    temp = torch.Tensor(temp).to(device)
-                    temp = torch.permute(temp, (2,0,1))
-                    temp = temp.unsqueeze(0)
-                    obs = temp
+                # if args.noisy_rgb: 
+                #     temp = torch.permute(obs[idx], (1,2,0)).cpu().numpy()
+                #     temp = temp/255
+                #     temp = skimage.util.random_noise(temp, mode = 'gaussian', var = 0.01) #default (0, 0.01)
+                #     temp = (temp*255).astype(np.uint8) 
+                #     temp = torch.Tensor(temp).to(device)
+                #     temp = torch.permute(temp, (2,0,1))
+                #     temp = temp.unsqueeze(0)
+                #     obs = temp
 
-                # img = Image.fromarray(temp.astype(np.uint8))
-                # img.save(f"tempp/noisy_{step}_10.png")
-                # img = Image.fromarray(temp.astype(np.uint8))
-                # img.save(f"tempp/image_{step}.png")   
+                # # img = Image.fromarray(temp.astype(np.uint8))
+                # # img.save(f"tempp/noisy_{step}_10.png")
+                # # img = Image.fromarray(temp.astype(np.uint8))
+                # # img.save(f"tempp/image_{step}.png")   
 
-                torch.save({"obs": obs.cpu(), "infos": infos}, data_dir + f"episode_{ep_num}@sub_{idx}@step_{step}.pt")
+                # torch.save({"obs": obs.cpu(), "infos": infos}, data_dir + f"episode_{ep_num}@sub_{idx}@step_{step}.pt")
             total_num_steps += 1
 
             g_step = (step // args.num_local_steps) % args.num_global_steps
@@ -397,25 +400,42 @@ def main():
             l_action = action.cpu()
             # ------------------------------------------------------------------
 
-            # Go back using saved action_list: 0 = TURN LEFT, 1 = TURN RIGHT, 2 = FORWARD
-            if step < args.return_step:
-                action_list.append(l_action.item())
-                total_action_list.append(l_action.item())
-            elif step >= args.return_step and step < args.return_step + 18:
-                l_action.fill_(0)
-            elif step >= args.return_step + 18:
-                latest_action = action_list.pop()
-                if latest_action == 2:
-                    fill_val = 2
-                elif latest_action == 1:
-                    fill_val = 0
-                elif latest_action == 0:
-                    fill_val = 1
-                l_action.fill_(fill_val)
-                total_action_list.append(l_action.item())
-            # ------------------------------------------------------------------
+            # # # Go back using saved action_list: 0 = TURN LEFT, 1 = TURN RIGHT, 2 = FORWARD
+            # if step < args.return_step:
+            #     action_list.append(l_action.item())
+            #     total_action_list.append(l_action.item())
+            # elif step >= args.return_step and step < args.return_step + 18:
+            #     l_action.fill_(0)
+            # elif step >= args.return_step + 18:
+            #     latest_action = action_list.pop()
+            #     if latest_action == 2:
+            #         fill_val = 2
+            #     elif latest_action == 1:
+            #         fill_val = 0
+            #     elif latest_action == 0:
+            #         fill_val = 1
+            #     l_action.fill_(fill_val)
+            #     total_action_list.append(l_action.item())
+            # # # ------------------------------------------------------------------
             # Env step
             obs, rew, done, infos = envs.step(l_action)
+            if infos[0]['pointgoal_measurements']['spl'] > 0.0: 
+                import pdb; pdb.set_trace()
+
+
+            spl = torch.from_numpy(np.asarray(
+                [infos[env_idx]['pointgoal_measurements']['spl'] for env_idx
+                 in range(num_scenes)])
+            ).float().to(device)
+
+            x_o = infos[0]['position'][0]
+            y_o = infos[0]['position'][1]
+            x_g = infos[0]['pointgoal'][0]
+            y_g = infos[0]['pointgoal'][1]
+            temp = np.sqrt((x_o - x_g)**2 + (y_o - y_g)**2 )
+            print("step: ", step, "spl is : ", spl , " distance to goal: ", temp )
+            if spl == 1: 
+                import pdb; pdb.set_trace()
 
             l_masks = torch.FloatTensor([0 if x else 1
                                          for x in done]).to(device)
@@ -456,6 +476,7 @@ def main():
                 [infos[env_idx]['sensor_pose'] for env_idx
                  in range(num_scenes)])
             ).float().to(device)
+
 
             _, _, local_map[:, 0, :, :], local_map[:, 1, :, :], _, local_pose = \
                 nslam_module(last_obs, obs, poses, local_map[:, 0, :, :],
@@ -680,7 +701,6 @@ def main():
             # Finish Training
             torch.set_grad_enabled(False)
             # ------------------------------------------------------------------
-
 
 
 if __name__ == "__main__":
